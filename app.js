@@ -6,9 +6,22 @@ const port = 3000
 
 const axios = require('axios')
 
+var cors = require('cors')
+
+app.use(cors())
+
 // Redis Configuration
 const redis = require("redis");
 const client = redis.createClient();
+
+// Sample Data
+const data = [
+    { id: 1, source: 'Anchorage', dest: 'Salt Lake City', price: 120 },
+    { id: 2, source: 'Seattle', dest: 'Denver', price: 220 },
+    { id: 3, source: 'Portland', dest: 'Boise', price: 20 },
+    { id: 4, source: 'Brisbane', dest: 'Los Angles', price: 80 },
+    { id: 5, source: 'Walla Walla', dest: 'Las Vegas', price: 50 }
+    ];
 
 app.use(express.json())
 
@@ -18,8 +31,14 @@ app.get('/info', (req, res) => {
     res.send('Hello World!')
 })
 
+app.get('/flights', (req, res) => {
+    res.send(JSON.stringify(data))
+})
+
 app.post('/purchase', (req, res) => {
     console.log(req.body)
+
+    const price = Number(`${data.find(f => f.id == req.body.flightId).price}00`)
 
     const token = Buffer.from(`${envvars.SPREEDLY_ENVIRONMENT}:${envvars.SPREEDLY_SECRET}`, 'utf8').toString('base64')
     axios
@@ -27,8 +46,8 @@ app.post('/purchase', (req, res) => {
             {
 
                 transaction: {
-                    payment_method_token: "DJzMa2rOjrB8MKJVq67YKC9tKTI",
-                    amount: 10000,
+                    payment_method_token: req.body.token,
+                    amount: price,
                     currency_code: "USD",
                     retain_on_success: true
                 }
