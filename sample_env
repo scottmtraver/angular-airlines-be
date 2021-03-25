@@ -2,4 +2,5 @@ SPREEDLY_URL=http://example.com
 SPREEDLY_ENVIRONMENT=abcdefg
 SPREEDLY_SECRET=supersecrethash
 SPREEDLY_GATEWAY=primarygateway
+SPREEDLY_RECEIVER=receivertoken
 REDIS_URL=localhost:6379

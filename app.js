@@ -21,7 +21,7 @@ const data = [
     { id: 3, source: 'Portland', dest: 'Boise', price: 20 },
     { id: 4, source: 'Brisbane', dest: 'Los Angles', price: 80 },
     { id: 5, source: 'Walla Walla', dest: 'Las Vegas', price: 50 }
-    ];
+];
 
 app.use(express.json())
 
@@ -33,6 +33,11 @@ app.get('/info', (req, res) => {
 
 app.get('/flights', (req, res) => {
     res.send(JSON.stringify(data))
+})
+
+app.get('/flights/:id/', function (req, res) {
+    const flight = data.filter(x => x.id == req.params.id)[0]
+    res.send(JSON.stringify(flight))
 })
 
 app.post('/purchase', (req, res) => {
@@ -55,7 +60,7 @@ app.post('/purchase', (req, res) => {
             {
                 headers: {
                     'Authorization': `Basic ${token}`
-                  },
+                },
             }
         )
         .then(purchaseResponse => {
@@ -66,6 +71,40 @@ app.post('/purchase', (req, res) => {
         .catch(error => {
             console.error(error)
             res.send('Purchase FAILED')
+        })
+
+    // client.set("key", "value", redis.print);
+    // client.get("key", redis.print);
+    // res.send('purchased')
+})
+
+app.post('/passthrough', (req, res) => {
+
+    const token = Buffer.from(`${envvars.SPREEDLY_ENVIRONMENT}:${envvars.SPREEDLY_SECRET}`, 'utf8').toString('base64')
+    axios
+        .post(`${envvars.SPREEDLY_URL}/receivers/${envvars.SPREEDLY_RECEIVER}/deliver.json`,
+        {
+            "delivery": {
+              "payment_method_token": req.body.token,
+              "url": "https://spreedly-echo.herokuapp.com",
+              "headers": "Content-Type: application/json",
+              "body": `{ \"product_id\": \"${req.body.flightId}\", \"card_number\": \"{{credit_card_number}}\" }`
+            }
+          },
+            {
+                headers: {
+                    'Authorization': `Basic ${token}`
+                },
+            }
+        )
+        .then(purchaseResponse => {
+            console.log(`statusCode: ${purchaseResponse.statusCode}`)
+            console.log(purchaseResponse)
+            res.send('Passthrough Success')
+        })
+        .catch(error => {
+            console.error(error)
+            res.send('Passthrough FAILED')
         })
 
     // client.set("key", "value", redis.print);
