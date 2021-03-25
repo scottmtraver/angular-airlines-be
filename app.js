@@ -72,10 +72,6 @@ app.post('/purchase', (req, res) => {
             console.error(error)
             res.send('Purchase FAILED')
         })
-
-    // client.set("key", "value", redis.print);
-    // client.get("key", redis.print);
-    // res.send('purchased')
 })
 
 app.post('/passthrough', (req, res) => {
@@ -106,10 +102,27 @@ app.post('/passthrough', (req, res) => {
             console.error(error)
             res.send('Passthrough FAILED')
         })
+})
 
-    // client.set("key", "value", redis.print);
-    // client.get("key", redis.print);
-    // res.send('purchased')
+app.get('/transactions', (req, res) => {
+
+    const token = Buffer.from(`${envvars.SPREEDLY_ENVIRONMENT}:${envvars.SPREEDLY_SECRET}`, 'utf8').toString('base64')
+    axios
+        .get(`${envvars.SPREEDLY_URL}/transactions.json?order=desc`,
+            {
+                headers: {
+                    'Authorization': `Basic ${token}`
+                },
+            }
+        )
+        .then(transactionResponse => {
+            console.log(`statusCode: ${transactionResponse.statusCode}`)
+            res.send(transactionResponse.data.transactions)
+        })
+        .catch(error => {
+            console.error(error)
+            res.send('Could not get transactions')
+        })
 })
 
 app.listen(port, () => {
