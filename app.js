@@ -26,23 +26,20 @@ const data = [
 app.use(express.json())
 
 app.get('/info', (req, res) => {
-    // process.env.DB_HOST,
     console.log(envvars)
-    res.send('Hello World!')
+    res.send('Logged env vars to server')
 })
 
 app.get('/flights', (req, res) => {
-    res.send(JSON.stringify(data))
+    res.send(data)
 })
 
 app.get('/flights/:id/', function (req, res) {
     const flight = data.filter(x => x.id == req.params.id)[0]
-    res.send(JSON.stringify(flight))
+    res.send(flight)
 })
 
 app.post('/purchase', (req, res) => {
-    console.log(req.body)
-
     const price = Number(`${data.find(f => f.id == req.body.flightId).price}00`)
 
     const token = Buffer.from(`${envvars.SPREEDLY_ENVIRONMENT}:${envvars.SPREEDLY_SECRET}`, 'utf8').toString('base64')
@@ -64,13 +61,10 @@ app.post('/purchase', (req, res) => {
             }
         )
         .then(purchaseResponse => {
-            console.log(`statusCode: ${purchaseResponse.statusCode}`)
-            console.log(purchaseResponse)
-            res.send('Purchase OK')
+            res.send({ success: true, message: 'Purchase Success' })
         })
         .catch(error => {
-            console.error(error)
-            res.send('Purchase FAILED')
+            res.send({ success: false, message: 'Purchase Failure' })
         })
 })
 
@@ -94,13 +88,10 @@ app.post('/passthrough', (req, res) => {
             }
         )
         .then(purchaseResponse => {
-            console.log(`statusCode: ${purchaseResponse.statusCode}`)
-            console.log(purchaseResponse)
-            res.send('Passthrough Success')
+            res.send({ success: true, message: 'Passthrough Success' })
         })
         .catch(error => {
-            console.error(error)
-            res.send('Passthrough FAILED')
+            res.send({ success: false, message: 'Passthrough Failure' })
         })
 })
 
@@ -116,12 +107,10 @@ app.get('/transactions', (req, res) => {
             }
         )
         .then(transactionResponse => {
-            console.log(`statusCode: ${transactionResponse.statusCode}`)
             res.send(transactionResponse.data.transactions)
         })
         .catch(error => {
-            console.error(error)
-            res.send('Could not get transactions')
+            res.send({ success: false, message: 'Could not list transactions' })
         })
 })
 
