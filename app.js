@@ -51,7 +51,7 @@ app.post('/purchase', (req, res) => {
                     payment_method_token: req.body.token,
                     amount: price,
                     currency_code: "USD",
-                    retain_on_success: true
+                    retain_on_success: !!req.body.keepCC
                 }
             },
             {
@@ -61,6 +61,17 @@ app.post('/purchase', (req, res) => {
             }
         )
         .then(purchaseResponse => {
+            if (!req.body.keepCC) {
+                // remove the payment method in a background call
+                axios
+                    .put(`${envvars.SPREEDLY_URL}/payment_method/${req.body.token}/redact.json`,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${token}`
+                            },
+                        }
+                    )
+            }
             res.send({ success: true, message: 'Purchase Success' })
         })
         .catch(error => {
@@ -73,14 +84,14 @@ app.post('/passthrough', (req, res) => {
     const token = Buffer.from(`${envvars.SPREEDLY_ENVIRONMENT}:${envvars.SPREEDLY_SECRET}`, 'utf8').toString('base64')
     axios
         .post(`${envvars.SPREEDLY_URL}/receivers/${envvars.SPREEDLY_RECEIVER}/deliver.json`,
-        {
-            "delivery": {
-              "payment_method_token": req.body.token,
-              "url": "https://spreedly-echo.herokuapp.com",
-              "headers": "Content-Type: application/json",
-              "body": `{ \"product_id\": \"${req.body.flightId}\", \"card_number\": \"{{credit_card_number}}\" }`
-            }
-          },
+            {
+                "delivery": {
+                    "payment_method_token": req.body.token,
+                    "url": "https://spreedly-echo.herokuapp.com",
+                    "headers": "Content-Type: application/json",
+                    "body": `{ \"product_id\": \"${req.body.flightId}\", \"card_number\": \"{{credit_card_number}}\" }`
+                }
+            },
             {
                 headers: {
                     'Authorization': `Basic ${token}`
